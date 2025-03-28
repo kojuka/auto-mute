@@ -8,6 +8,8 @@ class AutoMuteExtension {
   #iconSwitcher;
   /** @member {Object} */
   #logger;
+  /** @member {Map<number, string>} */
+  #lastUrls;
 
   /**
    * @param {Object} chromeInstance
@@ -28,6 +30,7 @@ class AutoMuteExtension {
     this.#tabTracker = tabTracker;
     this.#iconSwitcher = iconSwitcher;
     this.#logger = logger;
+    this.#lastUrls = new Map();
   }
 
   async start() {
@@ -58,15 +61,30 @@ class AutoMuteExtension {
     this.#chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       try {
         if (changeInfo.url) {
-          this.#logger.log(tabId + ": updated -> " + changeInfo.url);
-          await this.#tabTracker.onTabUrlChanged(tabId, changeInfo.url);
-          await this.#iconSwitcher.updateIcon();
+          const lastUrl = this.#lastUrls.get(tabId);
+          const newUrl = changeInfo.url;
+          
+          // Only process URL changes if:
+          // 1. It's a new URL (not the same as last)
+          // 2. It's not a YouTube video navigation (checking for /watch)
+          // 3. It's not a client-side navigation (checking if status is complete)
+          if (lastUrl !== newUrl && 
+              !(newUrl.includes('youtube.com/watch') && lastUrl?.includes('youtube.com/watch')) &&
+              changeInfo.status === 'complete') {
+            
+            this.#logger.log(tabId + ": updated -> " + newUrl);
+            await this.#tabTracker.onTabUrlChanged(tabId, newUrl);
+            await this.#iconSwitcher.updateIcon();
+          }
+          
+          this.#lastUrls.set(tabId, newUrl);
         }
       } catch (e) {
         this.#logger.error(e);
       }
     });
 
+    // Only update icon on tab activation, don't trigger muting
     this.#chrome.tabs.onActivated.addListener(async () => {
       try {
         this.#logger.log("Tab activated");
@@ -76,6 +94,7 @@ class AutoMuteExtension {
       }
     });
 
+    // Only update icon on window focus change, don't trigger muting
     this.#chrome.windows.onFocusChanged.addListener(async () => {
       try {
         this.#logger.log("Window focus changed");

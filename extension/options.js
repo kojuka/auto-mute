@@ -2,6 +2,7 @@
   let initialEnabled;
   let initialList;
   let initialUsingAllowList;
+  let initialIconTheme;
 
   function setControlsEnabled(enabled) {
     document.getElementById("check-enabled").disabled = !enabled;
@@ -22,11 +23,13 @@
       .filter((line) => !!line)
       .join("\n");
     const usingAllowList = document.getElementById("radio-allow").checked;
+    const iconTheme = document.querySelector('input[name="icon-theme"]:checked').value;
 
     await _chrome.storage.sync.set({
       enabled,
       allowOrBlockList: list,
       usingAllowList,
+      iconTheme,
     });
 
     document.getElementById("status").innerHTML = "Options saved.";
@@ -51,11 +54,13 @@
           enabled: initialEnabled,
           allowOrBlockList: initialList,
           usingAllowList: initialUsingAllowList,
+          iconTheme: initialIconTheme,
         },
         current: {
           enabled,
           allowOrBlockList: list,
           usingAllowList,
+          iconTheme,
         },
       },
     });
@@ -66,16 +71,19 @@
       enabled: true,
       allowOrBlockList: "",
       usingAllowList: true,
+      iconTheme: "system",
     });
 
     initialEnabled = items.enabled;
     initialList = items.allowOrBlockList;
     initialUsingAllowList = items.usingAllowList;
+    initialIconTheme = items.iconTheme;
 
     document.getElementById("check-enabled").checked = items.enabled;
     document.getElementById("url-list").value = items.allowOrBlockList;
     document.getElementById("radio-allow").checked = items.usingAllowList;
     document.getElementById("radio-block").checked = !items.usingAllowList;
+    document.getElementById(`radio-${items.iconTheme}`).checked = true;
 
     if (items.usingAllowList) {
       document.getElementById("allow-description").style.display = "block";

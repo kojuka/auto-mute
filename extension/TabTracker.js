@@ -6,6 +6,12 @@ class TabTracker {
   #listExpert;
   /** @member {Object} */
   #logger;
+  /** @member {Map<number, boolean>} */
+  #muteStateCache;
+  /** @member {number} */
+  #debounceTimeout;
+  /** @member {boolean} */
+  #isProcessing;
 
   /**
    * @param {Object} chromeInstance
@@ -18,6 +24,9 @@ class TabTracker {
     this.#extensionOptions = extensionOptions;
     this.#listExpert = listExpert;
     this.#logger = logger;
+    this.#muteStateCache = new Map();
+    this.#debounceTimeout = 0;
+    this.#isProcessing = false;
   }
 
   /**
@@ -186,17 +195,35 @@ class TabTracker {
    * @param {boolean} force
    */
   async #setMuteOnTab(tabId, muted, force) {
-    const shouldMute = !!force || (await this.#extensionOptions.getEnabled());
-    if (shouldMute) {
-      const tab = await this.#getTabById(tabId);
-      // I don't think this check is necessary, but it's difficult to verify
-      // that setting the mute state to the same value will not update the
-      // tab's extensionId. So, I'm going to leave this check in place.
-      if (tab?.mutedInfo?.muted !== muted) {
-        await this.#chrome.tabs.update(tabId, { muted });
-      }
+    // Clear any existing timeout
+    if (this.#debounceTimeout) {
+      clearTimeout(this.#debounceTimeout);
     }
-    this.#logger.log(`${tabId}: muted -> ${muted}`);
+
+    // Set a new timeout to process the mute operation
+    this.#debounceTimeout = setTimeout(async () => {
+      if (this.#isProcessing) {
+        return;
+      }
+
+      this.#isProcessing = true;
+      try {
+        const shouldMute = !!force || (await this.#extensionOptions.getEnabled());
+        if (shouldMute) {
+          const tab = await this.#getTabById(tabId);
+          const currentMutedState = tab?.mutedInfo?.muted ?? false;
+          
+          // Only update if the state has actually changed
+          if (currentMutedState !== muted) {
+            await this.#chrome.tabs.update(tabId, { muted });
+            this.#muteStateCache.set(tabId, muted);
+            this.#logger.log(`${tabId}: muted -> ${muted}`);
+          }
+        }
+      } finally {
+        this.#isProcessing = false;
+      }
+    }, 100); // 100ms debounce
   }
 
   /**

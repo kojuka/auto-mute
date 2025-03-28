@@ -17,8 +17,8 @@ class IconSwitcher {
     this.#chrome = chromeInstance;
     this.#tabTracker = tabTracker;
     this.#logger = logger;
-    this.#systemColorScheme = "unset";
-    this.#getSystemColorScheme();
+    this.#systemColorScheme = "dark";
+    this.#setSystemColorScheme("dark");
   }
 
   /**
@@ -85,20 +85,23 @@ class IconSwitcher {
    * @returns {Promise<void>}
    */
   async updateIcon() {
-    let systemColorScheme = await this.#getSystemColorScheme();
-
-    if (systemColorScheme === "unset") {
-      this.#logger.log(
-        "System color scheme is unset. Assuming light mode for icon."
-      );
-      systemColorScheme = "light";
-    }
-
     const onOrOff = (await this.#tabTracker.isCurrentTabMutedByExtension())
       ? "off"
       : "on";
 
-    const path = `images/${systemColorScheme}_${onOrOff}_16.png`;
+    // Get the user's icon theme preference
+    const { iconTheme = "system" } = await this.#chrome.storage.sync.get({ iconTheme: "system" });
+    
+    // If user has chosen a specific theme, use it
+    let theme = iconTheme;
+    if (theme === "system") {
+      theme = await this.#getSystemColorScheme();
+      if (theme === "unset") {
+        theme = "light";  // Default to light if system theme is unset
+      }
+    }
+
+    const path = `images/${theme}_${onOrOff}_16.png`;
     this.#logger.log(`Setting icon to ${path}`);
     await this.#chrome.action.setIcon({
       path,
