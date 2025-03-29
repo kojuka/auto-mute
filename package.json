@@ -1,6 +1,6 @@
 {
   "name": "muted",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Automatically mutes new browser tabs as soon as they are opened",
   "type": "module",
   "devDependencies": {
