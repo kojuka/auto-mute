@@ -1,6 +1,6 @@
 {
   "name": "muted",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Automatically mutes new browser tabs as soon as they are opened",
   "type": "module",
   "devDependencies": {
@@ -24,7 +24,10 @@
     "version:major": "./bump-version.sh major",
     "version:minor": "./bump-version.sh minor",
     "version:patch": "./bump-version.sh patch",
-    "release": "npm run version:minor && npm run build"
+    "release": "npm run release:patch",
+    "release:major": "npm run version:major && npm run build",
+    "release:minor": "npm run version:minor && npm run build",
+    "release:patch": "npm run version:patch && npm run build"
   },
   "repository": {
     "type": "git",
