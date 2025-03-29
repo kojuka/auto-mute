@@ -58,26 +58,38 @@ class AutoMuteExtension {
       }
     );
 
+    // this.#chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+    //   try {
+    //     if (changeInfo.url) {
+    //       const lastUrl = this.#lastUrls.get(tabId);
+    //       const newUrl = changeInfo.url;
+          
+    //       // Only process URL changes if:
+    //       // 1. It's a new URL (not the same as last)
+    //       // 2. It's not a client-side navigation (checking if status is complete)
+    //       // 3. The URL change is significant enough to warrant muting (not just hash changes or query params)
+    //       if (lastUrl !== newUrl && 
+    //           changeInfo.status === 'complete' &&
+    //           this.#isSignificantUrlChange(lastUrl, newUrl)) {
+            
+    //         this.#logger.log(tabId + ": updated -> " + newUrl);
+    //         await this.#tabTracker.onTabUrlChanged(tabId, newUrl);
+    //         await this.#iconSwitcher.updateIcon();
+    //       }
+          
+    //       this.#lastUrls.set(tabId, newUrl);
+    //     }
+    //   } catch (e) {
+    //     this.#logger.error(e);
+    //   }
+    // });
+
     this.#chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       try {
         if (changeInfo.url) {
-          const lastUrl = this.#lastUrls.get(tabId);
-          const newUrl = changeInfo.url;
-          
-          // Only process URL changes if:
-          // 1. It's a new URL (not the same as last)
-          // 2. It's not a YouTube video navigation (checking for /watch)
-          // 3. It's not a client-side navigation (checking if status is complete)
-          if (lastUrl !== newUrl && 
-              !(newUrl.includes('youtube.com/watch') && lastUrl?.includes('youtube.com/watch')) &&
-              changeInfo.status === 'complete') {
-            
-            this.#logger.log(tabId + ": updated -> " + newUrl);
-            await this.#tabTracker.onTabUrlChanged(tabId, newUrl);
-            await this.#iconSwitcher.updateIcon();
-          }
-          
-          this.#lastUrls.set(tabId, newUrl);
+          this.#logger.log(tabId + ": updated -> " + changeInfo.url);
+          await this.#tabTracker.onTabUrlChanged(tabId, changeInfo.url);
+          await this.#iconSwitcher.updateIcon();
         }
       } catch (e) {
         this.#logger.error(e);
@@ -244,6 +256,30 @@ class AutoMuteExtension {
     }
 
     await this.#iconSwitcher.updateIcon();
+  }
+
+  /**
+   * Determines if a URL change is significant enough to warrant muting.
+   * Ignores changes to hash fragments and query parameters.
+   * @param {string} oldUrl - The previous URL
+   * @param {string} newUrl - The new URL
+   * @returns {boolean} - True if the URL change is significant
+   */
+  #isSignificantUrlChange(oldUrl, newUrl) {
+    if (!oldUrl || !newUrl) return true;
+    
+    try {
+      const oldUrlObj = new URL(oldUrl);
+      const newUrlObj = new URL(newUrl);
+      
+      // Compare the main URL components (protocol, host, pathname)
+      return oldUrlObj.protocol !== newUrlObj.protocol ||
+             oldUrlObj.host !== newUrlObj.host ||
+             oldUrlObj.pathname !== newUrlObj.pathname;
+    } catch (e) {
+      this.#logger.error('Error parsing URLs:', e);
+      return true; // If we can't parse the URLs, consider it a significant change
+    }
   }
 }
 
