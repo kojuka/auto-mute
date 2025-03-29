@@ -1,21 +1,15 @@
-class UpgradeCoordinator {
-  #chrome;
-  /** @member {Object} */
-  #logger;
+import { ChromeInstance, Logger } from './types';
 
-  /**
-   * @param {Object} chromeInstance
-   * @param {Object} logger
-   */
-  constructor(chromeInstance, logger) {
+class UpgradeCoordinator {
+  #chrome: ChromeInstance;
+  #logger: Logger;
+
+  constructor(chromeInstance: ChromeInstance, logger: Logger) {
     this.#chrome = chromeInstance;
     this.#logger = logger;
   }
 
-  /**
-   * @returns {Promise<void>}
-   */
-  async upgrade() {
+  async upgrade(): Promise<void> {
     const keys = await this.#chrome.storage.sync.getKeys();
 
     // We don't want to use the terms "whitelist" and "blacklist" anymore.
@@ -45,4 +39,4 @@ class UpgradeCoordinator {
   }
 }
 
-export default UpgradeCoordinator;
+export default UpgradeCoordinator; 

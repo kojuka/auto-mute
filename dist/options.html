@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AutoMute Options</title>
+    <style>
+      body {
+        /* Default light theme */
+        background-color: white;
+        color: black;
+      }
+
+      /* Dark theme styles using prefers-color-scheme */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #212121;
+          color: #e0e0e0;
+        }
+
+        #status {
+          color: darkgray;
+        }
+      }
+
+      hr {
+        border-top: 1px solid #ccc; /* Light theme default */
+      }
+
+      @media (prefers-color-scheme: dark) {
+        hr {
+          border-top: 1px solid #555; /* Dark theme hr color */
+        }
+      }
+
+      #url-list {
+        background-color: white; /* Default light theme */
+        color: black;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        #url-list {
+          background-color: #333; /* Dark theme background */
+          color: #e0e0e0; /* Dark theme text color */
+        }
+      }
+    </style>
+    <script src="options.js"></script>
+  </head>
+  <body>
+    <div>
+      <label>
+        <input type="checkbox" id="check-enabled" />
+        Automatically mute tabs based on current rules
+      </label>
+    </div>
+
+    <div style="padding-top: 12px; padding-bottom: 12px">
+      <span>
+        When the toggle is set to "allow mode," only the pages you list will
+        play sound while all other pages are muted. When it's set to "block
+        mode," only the pages you list will be muted while all others play
+        sound.</span
+      >
+      <div style="padding-left: 20px">
+        <label for="radio-allow">
+          <input
+            type="radio"
+            name="allow-block"
+            id="radio-allow"
+            value="allow"
+            checked
+          />
+          Use an allow audio list</label
+        ><br />
+        <label for="radio-block">
+          <input
+            type="radio"
+            name="allow-block"
+            id="radio-block"
+            value="block"
+          />
+          Use a block audio list</label
+        >
+      </div>
+    </div>
+
+    <hr />
+
+    <div style="padding-top: 12px; padding-bottom: 12px">
+      <span>Choose the icon theme for better visibility:</span>
+      <div style="padding-left: 20px">
+        <label for="radio-system">
+          <input
+            type="radio"
+            name="icon-theme"
+            id="radio-system"
+            value="system"
+            checked
+          />
+          Use system theme</label
+        ><br />
+        <label for="radio-light">
+          <input
+            type="radio"
+            name="icon-theme"
+            id="radio-light"
+            value="light"
+          />
+          Light theme</label
+        ><br />
+        <label for="radio-dark">
+          <input
+            type="radio"
+            name="icon-theme"
+            id="radio-dark"
+            value="dark"
+          />
+          Dark theme</label
+        >
+      </div>
+    </div>
+
+    <hr />
+
+    <div style="padding-top: 12px; padding-bottom: 12px">
+      <div id="allow-description">
+        Specify a list of URLs where <b>audio will be allowed</b>. These pages
+        <b>will not be muted</b> automatically and all pages not in the list
+        will be muted automatically. Put one URL on each line. You can use the
+        wildcard (*) character to indicate URL groups.
+      </div>
+      <div id="block-description" style="display: none">
+        Specify a list of blocked URLs where <b>audio will be blocked</b>. These
+        pages <b>will be muted</b> automatically and all pages not in the list
+        will not be muted automatically. Put one URL on each line. You can use
+        the wildcard (*) character to indicate URL groups.
+      </div>
+
+      <div style="padding-top: 10px">
+        <span style="color: darkgray">
+          <b>NOTE:</b> You can also use regular expression syntax to indicate
+          URL groups if you surround the URL with backtick (`) characters.</span
+        >
+      </div>
+
+      <div style="padding-top: 12px">
+        Examples:
+        <ul style="margin-top: 5px">
+          <li>https://www.example.com/</li>
+          <li>https://www.example.com/*</li>
+          <li>https://*.example.com/*/page.html</li>
+          <li>
+            `^https://.*\.?example\.com/.*$`
+            <span style="color: darkgray">&larr; Using regex</span>
+          </li>
+        </ul>
+      </div>
+
+      <textarea id="url-list" rows="8" cols="80"></textarea>
+    </div>
+
+    <div
+      id="status"
+      style="position: absolute; left: 10px; bottom: 12px; color: lightgray"
+    ></div>
+    <div align="right">
+      <button id="save">Save</button>
+    </div>
+  </body>
+</html>

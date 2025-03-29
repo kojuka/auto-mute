@@ -1,7 +1,16 @@
-(function (_chrome, _matchMedia, _setInterval, _console) {
+import { ChromeInstance, Logger } from './types';
+
+interface WindowWithChrome {
+  chrome: ChromeInstance;
+  matchMedia: (query: string) => MediaQueryList;
+  setInterval: (callback: () => void, ms: number) => number;
+  console: Logger;
+}
+
+(function (_chrome: ChromeInstance, _matchMedia: Window['matchMedia'], _setInterval: Window['setInterval'], _console: Logger) {
   let last_scheme = "unset";
 
-  async function send_scheme(scheme) {
+  async function send_scheme(scheme: string) {
     _console.log(`Sending system color scheme: ${scheme}`);
     try {
       const response = await _chrome.runtime.sendMessage({
@@ -12,7 +21,7 @@
       last_scheme = response.systemColorScheme;
     } catch (e) {
       last_scheme = "unset";
-      _console.error(e);
+      _console.error(e as string);
     }
   }
 
@@ -31,4 +40,4 @@
       await send_scheme(current_scheme);
     }
   }, 1000);
-})(window.chrome, window.matchMedia, window.setInterval, window.console);
+})((window as unknown as WindowWithChrome).chrome, window.matchMedia, window.setInterval, window.console); 
